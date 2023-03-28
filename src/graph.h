@@ -13,6 +13,7 @@ class Graph {
     Graph(int _n) {
         n = _n;
         head = vector<int> (n+1, -1);
+        p = vector<double> (n+1, 0);
     }
     void addedge(int from, int to) {
         edges.push_back(Edge(from, to, head[from]));
@@ -25,4 +26,6 @@ public:
     vector<int> head;
     //边集合数组
     vector<Edge> edges;
+    //pagerank概率
+    vector<double> p;
 };
