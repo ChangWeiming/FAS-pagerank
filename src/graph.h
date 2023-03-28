@@ -10,6 +10,7 @@ struct Edge {
 };
 
 class Graph {
+public:
     Graph(int _n) {
         n = _n;
         head = vector<int> (n+1, -1);
@@ -19,7 +20,6 @@ class Graph {
         edges.push_back(Edge(from, to, head[from]));
         head[from] = edges.size() - 1;
     }
-public:
     //图中的点的个数
     int n;
     //head数组
