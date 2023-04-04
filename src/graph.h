@@ -54,6 +54,7 @@ class LineGraph: public Graph {
             int index = 0;
             for(int i = 1; i <= node_num; i++) {
                 if(max_p < p[i]) {
+                    max_p = p[i];
                     index = i;
                 }
             }
