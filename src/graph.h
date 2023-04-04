@@ -64,11 +64,26 @@ class LineGraph: public Graph {
         // Node's Indegree
     	vector<int> in_degree;
         // Node's Outdegree
-        vector<int> out_degree;  
+        vector<int> out_degree;
         // Node's Page Rank Score
         vector<float> p;
         // Node's Page Rank Score Out
         vector<float> p_out;
-}; 
+};
 
+class GreedyGraph: public Graph {
+    public:
+        GreedyGraph(int _n): Graph(_n) {
+            out_degree = vector<int> (n+1, 0);
+        }
+
+        void add_edge(int from, int to) {
+            edges.push_back(Edge(from, to, head[from]));
+            head[from] = edges.size() - 1;
+		    out_degree[from] += 1;
+        }
+
+        // Node's Outdegree
+        vector<int> out_degree;
+};
 #endif
