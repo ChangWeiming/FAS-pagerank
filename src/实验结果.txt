@@ -1,0 +1,7 @@
+enron数据集
+greedyfas算法：back_src = 34434，用时7.595s
+sortfas算法：back_src =  33159，用时335.469s
+
+wordassociation-2011数据集
+greedyfas算法：back_src = 13164，用时1.783s
+sortfas算法：back_src =  11789，用时13.520s
