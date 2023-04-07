@@ -43,18 +43,18 @@ vector<int> SortFAS(Graph* g) {
     for (int i = 0; i <= n; i++) posi_order.push_back(i);
 
     // 对n个元素进行重排序
-    for (int i = 1; i <= n; i++) {
+    for (int i = 0; i <= n; i++) {
 
         // Find node i's index
         auto i_index = find(posi_order.begin(), posi_order.end(), i);
         int index = distance(posi_order.begin(), i_index);
-        int min_posi = 1;
+        int min_posi = 0;
 
         // 有n种重排序的方法
         int now_backarc = 0, last_backarc = 0;
         int now_val = 0, min_val = 0;
-        min_posi = 1;
-        for (int j = 1; j <= n; j++) {
+        min_posi = 0;
+        for (int j = 0; j <= n; j++) {
             // Insert node i into the last linear arrangement for each position
             vector<int> temp_order = posi_order;
             temp_order.erase(temp_order.begin()+index);
@@ -63,7 +63,7 @@ vector<int> SortFAS(Graph* g) {
             vector<int> state (n + 1, 0);
             now_backarc = 0;
             // compute the backward arcs
-            for(int i = 1; i <= temp_order.size()-1; i++) {
+            for(int i = 0; i <= temp_order.size()-1; i++) {
                 int x = temp_order[i];
                 state[x] = 1;
                 for(int k = g->head[x]; k != -1; k = g->edges[k].next) {
@@ -71,11 +71,11 @@ vector<int> SortFAS(Graph* g) {
                 }
             }
 
-            if(j == 1) {
+            if(j == 0) {
                 last_backarc = now_backarc;
                 now_val = 0;
                 min_val = 0;
-                min_posi = 1;
+                min_posi = 0;
                 continue;
             }
 
@@ -96,11 +96,12 @@ vector<int> SortFAS(Graph* g) {
 }
 
 int main() {
-    int n = 6;
+    int n = 69244 - 1;
 
     Graph g(n);
 
-    string file_path = "D:\\Code\\data\\dataset.txt";
+    string file_path = "D:\\Code\\graph_datasets\\enron.txt";
+    // 数据集路径："D:\\Code\\data\\dataset.txt","D:\\Code\\data\\dataset_2.txt","D:\\Code\\graph_datasets\\enron.txt"
     ifstream file(file_path);
     if (!file.is_open()) {
         cerr << "Error opening file.\n";
@@ -113,39 +114,46 @@ int main() {
         int num1, num2;
         char comma;
         if (ss >> num1 >> comma >> num2) {
-            cout << "num1: " << num1 << ", num2: " << num2 << '\n';
+            //cout << "num1: " << num1 << ", num2: " << num2 << '\n';
             g.add_edge(num1, num2);
         }
     }
 
     file.close();
 
-    cout << g.head.size() << endl;
-    for (int i = 1; i <= g.head.size()-1; i++) {
-        cout << "Vertex " << i << " is connected to: ";
-        for (int j = g.head[i]; j != -1; j = g.edges[j].next) {
-            if (g.edges[j].to != -1) {
-                cout << g.edges[j].to << " ";
-            }
-        }
-        cout << endl;
-    }
-    cout << g.head.size()-1 << endl;
+//    cout << g.head.size() << endl;
+//    for (int i = 0; i <= g.head.size()-1; i++) {
+//        cout << "Vertex " << i << " is connected to: ";
+//        for (int j = g.head[i]; j != -1; j = g.edges[j].next) {
+//            if (g.edges[j].to != -1) {
+//                cout << g.edges[j].to << " ";
+//            }
+//        }
+//        cout << endl;
+//    }
+//    cout << g.head.size()-1 << endl;
     vector<int> s = SortFAS(&g);
-    cout << "====begin print back arc====" << endl;
-    cout << s.size() <<endl;
-    for (int i = 0; i < s.size(); i++) {
-        cout << s[i] << " ";
-    }
-    cout << endl;
+//    cout << "====begin print back arc====" << endl;
+//    cout << s.size() <<endl;
+//    for (int i = 0; i < s.size(); i++) {
+//        cout << s[i] << " ";
+//    }
+//    cout << endl;
     vector<int> state (n + 1, 0);
+    int back_src = 0;
+
+    cout << "SortFAS is:\n";
     for(auto x: s) {
         state[x] = 1;
-        for(int k = g.head[x]; k != -1; k = g.edges[k].next) {
-            if(state[g.edges[k].to]) cout << x << ' ' << g.edges[k].to << endl;
+        for(int i = g.head[x]; i != -1; i = g.edges[i].next) {
+            if(state[g.edges[i].to]) {
+                //cout << x << ' ' << forward_g.edges[i].to << endl;
+                back_src +=1;
+            }
         }
     }
+
+    cout << "back_src = " << back_src << endl;
 
     return 0;
 }
-
