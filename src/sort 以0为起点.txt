@@ -1,0 +1,151 @@
+#include <iostream>
+#include <vector>
+#include <numeric>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+struct Edge {
+    int from, to, next;
+    Edge (int f = 0, int t = 0, int n = -1) {
+        from = f; to = t; next = n;
+    }
+};
+
+class Graph {
+    public:
+        Graph(int _n) {
+            n = _n;
+            head = vector<int> (n+1, -1);
+        }
+
+        void add_edge(int from, int to) {
+            edges.push_back(Edge(from, to, head[from]));
+            head[from] = edges.size() - 1;
+        }
+        // Number of Node
+        int n;
+        // Node Set
+        vector<int> head;
+        // Edge Set
+        vector<Edge> edges;
+};
+
+vector<int> SortFAS(Graph* g) {
+
+    int n = g->head.size()-1;
+
+    // The last iteration's position order
+    vector<int> posi_order;
+    for (int i = 0; i <= n; i++) posi_order.push_back(i);
+
+    // 对n个元素进行重排序
+    for (int i = 0; i <= n; i++) {
+
+        // Find node i's index
+        auto i_index = find(posi_order.begin(), posi_order.end(), i);
+        int index = distance(posi_order.begin(), i_index);
+        int min_posi = 0;
+
+        // 有n种重排序的方法
+        int now_backarc = 0, last_backarc = 0;
+        int now_val = 0, min_val = 0;
+        min_posi = 0;
+        for (int j = 0; j <= n; j++) {
+            // Insert node i into the last linear arrangement for each position
+            vector<int> temp_order = posi_order;
+            temp_order.erase(temp_order.begin()+index);
+            temp_order.insert(temp_order.begin() + j, i);
+
+            vector<int> state (n + 1, 0);
+            now_backarc = 0;
+            // compute the backward arcs
+            for(int i = 0; i <= temp_order.size()-1; i++) {
+                int x = temp_order[i];
+                state[x] = 1;
+                for(int k = g->head[x]; k != -1; k = g->edges[k].next) {
+                    if(state[g->edges[k].to]) now_backarc += 1;
+                }
+            }
+
+            if(j == 0) {
+                last_backarc = now_backarc;
+                now_val = 0;
+                min_val = 0;
+                min_posi = 0;
+                continue;
+            }
+
+            now_val += now_backarc - last_backarc;
+
+            last_backarc = now_backarc;
+            if (now_val < min_val) {
+                min_val = now_val;
+                min_posi = j;
+            }
+        }
+
+        posi_order.erase(i_index);
+        posi_order.insert(posi_order.begin() + min_posi, i);
+    }
+
+    return posi_order;
+}
+
+int main() {
+    int n = 5;
+
+    Graph g(n);
+
+    string file_path = "D:\\Code\\data\\dataset_2.txt";
+    ifstream file(file_path);
+    if (!file.is_open()) {
+        cerr << "Error opening file.\n";
+        return 1;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        int num1, num2;
+        char comma;
+        if (ss >> num1 >> comma >> num2) {
+            //cout << "num1: " << num1 << ", num2: " << num2 << '\n';
+            g.add_edge(num1, num2);
+        }
+    }
+
+    file.close();
+
+    cout << g.head.size() << endl;
+    for (int i = 0; i <= g.head.size()-1; i++) {
+        cout << "Vertex " << i << " is connected to: ";
+        for (int j = g.head[i]; j != -1; j = g.edges[j].next) {
+            if (g.edges[j].to != -1) {
+                cout << g.edges[j].to << " ";
+            }
+        }
+        cout << endl;
+    }
+    cout << g.head.size()-1 << endl;
+    vector<int> s = SortFAS(&g);
+    cout << "====begin print back arc====" << endl;
+    cout << s.size() <<endl;
+    for (int i = 0; i < s.size(); i++) {
+        cout << s[i] << " ";
+    }
+    cout << endl;
+    vector<int> state (n + 1, 0);
+    for(auto x: s) {
+        state[x] = 1;
+        for(int k = g.head[x]; k != -1; k = g.edges[k].next) {
+            if(state[g.edges[k].to]) cout << x << ' ' << g.edges[k].to << endl;
+        }
+    }
+
+    return 0;
+}
+
