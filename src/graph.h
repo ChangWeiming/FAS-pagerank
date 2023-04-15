@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstring>
+#include <iostream>
 
 using namespace std;
 
@@ -23,6 +24,14 @@ class Graph {
         virtual void add_edge(int from, int to) {
             edges.push_back(Edge(from, to, head[from]));
             head[from] = edges.size() - 1;
+        }
+
+        virtual void print_graph() {
+            for (int u = 0; u < n; u++) {
+                for(int i = head[u]; ~i; i = edges[i].next) {
+                    cout << u << ' ' << edges[i].to << endl;
+                }
+            }
         }
         // Number of Node
         int n;
@@ -49,16 +58,21 @@ class LineGraph: public Graph {
         }
 
         int get_max_p_index() {
-            int node_num = head.size()-1;
             float max_p = 0;
             int index = 0;
-            for(int i = 1; i <= node_num; i++) {
+            for(int i = 0; i < n; i++) {
                 if(max_p < p[i]) {
                     max_p = p[i];
                     index = i;
                 }
             }
             return index;
+        }
+
+        void clear() {
+            //fill(p.begin(), p.end(), 0);
+            for(int i = 0;i < n; i++) head[i] = -1, in_degree[i] = 0, out_degree[i] = 0, p[i] = 0, p_out[i] = 0;
+            edges.clear();
         }
 
         // Node's Indegree

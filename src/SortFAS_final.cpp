@@ -96,11 +96,16 @@ void readGraph(Graph* g, string dataset_path) {
     file.close();
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     int n = enron_node;
-    Graph g(n);
-
     string file_path = enron_path;
+
+	if (argc == 3) {
+		sscanf(argv[1], "%d", &n);
+		file_path = string(argv[2]);
+	}
+
+    Graph g(n);
     readGraph(&g, file_path);
 
     vector<int> s = SortFAS(&g);
