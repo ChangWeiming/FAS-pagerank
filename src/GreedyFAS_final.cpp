@@ -10,6 +10,13 @@
 
 using namespace std;
 
+const int easy_node = 7;
+const int enron_node = 69244;
+const int word_node = 10617;
+const string easy_path = "D:\\Code\\graph_datasets\\easygraph.txt";
+const string enron_path = "D:\\Code\\graph_datasets\\enron.txt";
+const string word_path = "D:\\Code\\graph_datasets\\wordassociation-2011.txt";
+
 struct Edge {
     int from, to, next;
     Edge (int f = 0, int t = 0, int n = -1) {
@@ -36,65 +43,21 @@ class Graph {
         vector<Edge> edges;
 };
 
-class LineGraph: public Graph {
-    public:
-        LineGraph(int _n): Graph(_n) {
-            p = vector<float> (n, 0);
-            p_out = vector<float> (n, 0);
-            in_degree = vector<int> (n, 0);
-            out_degree = vector<int> (n, 0);
-        }
-
-        void add_edge(int from, int to) {
-            edges.push_back(Edge(from, to, head[from]));
-            head[from] = edges.size() - 1;
-            in_degree[to] += 1;
-		    out_degree[from] += 1;
-        }
-
-        int get_max_p_index() {
-            int node_num = head.size()-1;
-            float max_p = 0;
-            int index = 0;
-            for(int i = 1; i <= node_num; i++) {
-                if(max_p < p[i]) {
-                    max_p = p[i];
-                    index = i;
-                }
-            }
-            return index;
-        }
-
-        // Node's Indegree
-    	vector<int> in_degree;
-        // Node's Outdegree
-        vector<int> out_degree;
-        // Node's Page Rank Score
-        vector<float> p;
-        // Node's Page Rank Score Out
-        vector<float> p_out;
-};
-
 class GreedyGraph: public Graph {
     public:
         GreedyGraph(int _n): Graph(_n) {
-            out_degree = vector<int> (n+1, 0);
+            out_degree = vector<int> (n, 0);
         }
-
         void add_edge(int from, int to) {
             edges.push_back(Edge(from, to, head[from]));
             head[from] = edges.size() - 1;
 		    out_degree[from] += 1;
         }
-
         // Node's Outdegree
         vector<int> out_degree;
 };
 
 void update_degree(GreedyGraph* for_g, GreedyGraph* back_g, vector<int> remove_node) {
-
-    //cout << "===begin update_degree====" << endl;
-
     for (int i = 0; i < remove_node.size(); i++) {
         //update out_degree
         for (int j = back_g->head[remove_node[i]];j != -1; j = back_g->edges[j].next) {
@@ -108,46 +71,45 @@ void update_degree(GreedyGraph* for_g, GreedyGraph* back_g, vector<int> remove_n
 
 }
 
-vector<int> find_source(GreedyGraph* g, vector<int> state) {
-
-    //cout << "===begin find_source====" << endl;
-
+vector<int> find_source(GreedyGraph* back_g, vector<int> &state) {
     vector<int> source_index;
-    for (int i = 0; i < g->out_degree.size(); i++) {
-
+    for (int i = 0; i < back_g->out_degree.size(); i++) {
+        // If this node have been processed, then continue
         if (state[i] != 0) continue;
-
-        if (g->out_degree[i] == 0) source_index.push_back(i);
+        // Insert the source node at the end of the source_index and update this node's state
+        if (back_g->out_degree[i] == 0) {
+            source_index.push_back(i);
+            state[i] = 1;
+        }
     }
 
     return source_index;
 }
 
-vector<int> find_sink(GreedyGraph* g, vector<int> state) {
-
-    //cout << "===begin find_sink====" << endl;
-
+vector<int> find_sink(GreedyGraph* for_g, vector<int> &state) {
     vector<int> sink_index;
-    for (int i = 0; i < g->out_degree.size(); i++) {
-
+    for (int i = 0; i < for_g->out_degree.size(); i++) {
+        // If this node have been processed, then continue
         if (state[i] != 0) continue;
-
-        if (g->out_degree[i] == 0) sink_index.insert(sink_index.begin(), i);
+        // Insert the source node at the begninning of the sink_index and update this node's state
+        if (for_g->out_degree[i] == 0) {
+            sink_index.insert(sink_index.begin(), i);
+            state[i] = 1;
+        }
     }
 
     return sink_index;
 }
 
 int find_max(GreedyGraph* for_g, GreedyGraph* back_g, vector<int> state) {
-
-    //cout << "===begin find_max====" << endl;
-
-    int theta = -1, theta_temp = 0, max_index = -1;
+    int delta = -1, delta_temp = 0, max_index = -1;
     for (int i = 0; i < for_g->out_degree.size(); i++) {
+        // If this node have been processed, then continue
         if (state[i] != 0) continue;
-        theta_temp = for_g->out_degree[i] - back_g->out_degree[i];
-        if (theta < theta_temp) {
-            theta = theta_temp;
+        // Find the biggest delta
+        delta_temp = for_g->out_degree[i] - back_g->out_degree[i];
+        if (delta < delta_temp) {
+            delta = delta_temp;
             max_index = i;
         }
     }
@@ -157,9 +119,6 @@ int find_max(GreedyGraph* for_g, GreedyGraph* back_g, vector<int> state) {
 
 
 vector<int> GreedyFAS(GreedyGraph* for_g, GreedyGraph* back_g, int n) {
-
-    // compute out_degree - in_degree
-    vector<int> delta;
     // store the source node's index
     vector<int> s1;
     // store the sink node's index
@@ -167,29 +126,24 @@ vector<int> GreedyFAS(GreedyGraph* for_g, GreedyGraph* back_g, int n) {
     // store the index after GreedyFAS
     vector<int> s;
     // whether node i has been stored in s1/s2, 1 means yes
-    vector<int> state (n + 1, 0);
+    vector<int> state (n, 0);
 
-    cout << "===begin greedyfas====" << endl;
-
-    while (accumulate(state.begin(), state.end(), 0) != (n+1))
-    {
+    while (accumulate(state.begin(), state.end(), 0) < (n)) {
+        // Find source node and insert it in the end of s1
         vector<int> temps1 = find_source(back_g, state);
         while(temps1.size() != 0){
-            for (int i = 0; i < temps1.size(); i++) state[temps1[i]] = 1;
             update_degree(for_g, back_g, temps1);
             s1.insert(s1.end(), temps1.begin(), temps1.end());
             temps1 = find_source(back_g, state);
         }
-
+        // Find sink node and insert it in the begin of s2
         vector<int> temps2 = find_sink(for_g, state);
         while(temps2.size() != 0){
-            for (int i = 0; i < temps2.size(); i++)
-                state[temps2[i]] = 1;
             update_degree(for_g, back_g, temps2);
             s2.insert(s2.begin(), temps2.begin(), temps2.end());
             temps2 = find_sink(for_g, state);
         }
-
+        // Find the node with the most value of out_degree - in_degree
         vector<int> max_index (1, -1);
         max_index[0] = find_max(for_g, back_g, state);
         if (max_index[0] == -1) break;
@@ -203,15 +157,15 @@ vector<int> GreedyFAS(GreedyGraph* for_g, GreedyGraph* back_g, int n) {
     return s;
 }
 
-void readGraph(Graph* g, string dataset_path, int for_or_back) {
-
+void readGraph(Graph* g, string dataset_path, int for_or_reve) {
     ifstream file(dataset_path.c_str());
     if (!file.is_open()) {
         cerr << "Error opening file.\n";
     }
 
 	string line;
-	if (for_or_back == 0) {
+	// 0 represents storing forward graph, 1 represents storing reverse graph
+	if (for_or_reve == 0) {
         while (getline(file, line)) {
             stringstream ss(line);
             int num1, num2;
@@ -236,40 +190,27 @@ void readGraph(Graph* g, string dataset_path, int for_or_back) {
 }
 
 int main() {
-
-    int n = 69244;
-
+    int n = enron_node;
     GreedyGraph forward_g(n);
+    GreedyGraph reverse_g(n);
 
-    GreedyGraph backward_g(n);
-
-    string file_path = "D:\\Code\\graph_datasets\\enron.txt";
-
-    //"D:\\Code\\data\\dataset.txt","D:\\Code\\data\\dataset_2.txt","D:\\Code\\graph_datasets\\enron.txt"
-
+    string file_path = enron_path;
     readGraph(&forward_g, file_path, 0);
+    readGraph(&reverse_g, file_path, 1);
 
-    readGraph(&backward_g, file_path, 1);
-
-    vector<int> s = GreedyFAS(&forward_g, &backward_g, n);
-
-    //for(int i=0;i<=s.size()-1;i++) cout<<s[i]<<endl;
-    vector<int> state (n + 1, 0);
-
-    int back_src = 0;
-
-    cout << "GreedyFAS is:\n";
+    vector<int> s = GreedyFAS(&forward_g, &reverse_g, n);
+    vector<int> state (n, 0);
+    float back_src = 0;
+    float greedy_fas = 0;
+    // Print the back_src
     for(auto x: s) {
         state[x] = 1;
         for(int i = forward_g.head[x]; i != -1; i = forward_g.edges[i].next) {
-            if(state[forward_g.edges[i].to]) {
-                //cout << x << ' ' << forward_g.edges[i].to << endl;
-                back_src +=1;
-            }
+            if(state[forward_g.edges[i].to]) back_src +=1;
         }
     }
-
     cout << "back_src = " << back_src << endl;
-
+    greedy_fas = back_src/forward_g.edges.size();
+    cout << "greedy_fas = " << greedy_fas << endl;
     return 0;
 }
